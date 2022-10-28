@@ -34,6 +34,16 @@ extern "C" {
                    dest_matrix, dest_matrix.size(), 0, 0, cv::INTER_AREA);
     }
 
+    void pad(int64_t cresizer, int64_t source_p, int64_t sx, int64_t sy,
+                int64_t start_row, int64_t end_row, int64_t start_col, int64_t end_col,
+                int64_t dest_p, int64_t tx, int64_t ty) {
+
+        cv::Mat source_matrix(sx, sy, CV_8UC3, (uint8_t*) source_p);
+        cv::Mat dest_matrix(tx, ty, CV_8UC3, (uint8_t*) dest_p);
+        cv::copyMakeBorder(source_matrix.colRange(start_col, end_col).rowRange(start_row, end_row),
+                   dest_matrix, 0, ty - (end_row - start_row), 0, tx - (end_col - start_col), cv::BORDER_CONSTANT, 0);
+    }
+
     void my_memcpy(void *source, void* dst, uint64_t size) {
         memcpy(dst, source, size);
     }

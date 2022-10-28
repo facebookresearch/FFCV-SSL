@@ -12,7 +12,7 @@ from ..pipeline.operation import Operation
 from ..pipeline.state import State
 from ..pipeline.compiler import Compiler
 from ..pipeline.allocation_query import AllocationQuery
-from ..libffcv import imdecode, memcpy, resize_crop
+from ..libffcv import imdecode, memcpy, resize_crop, pad
 
 if TYPE_CHECKING:
     from ..memory_managers.base import MemoryManager
@@ -138,7 +138,6 @@ instead."""
         decode.is_parallel = True
         return decode
 
-
 class ResizedCropRGBImageDecoder(SimpleRGBImageDecoder, metaclass=ABCMeta):
     """Abstract decoder for :class:`~ffcv.fields.RGBImageField` that performs a crop and and a resize operation.
 
@@ -215,6 +214,74 @@ class ResizedCropRGBImageDecoder(SimpleRGBImageDecoder, metaclass=ABCMeta):
     @abstractmethod
     def get_crop_generator():
         raise NotImplementedError
+
+
+
+class PadRGBImageDecoder(SimpleRGBImageDecoder, metaclass=ABCMeta):
+    """Abstract decoder for :class:`~ffcv.fields.RGBImageField` that performs a crop and and a resize operation.
+
+    It supports both variable and constant resolution datasets.
+    """
+    def __init__(self):
+        super().__init__()
+
+    def declare_state_and_memory(self, previous_state: State) -> Tuple[State, AllocationQuery]:
+        widths = self.metadata['width']
+        heights = self.metadata['height']
+        # We convert to uint64 to avoid overflows
+        self.max_width = np.uint64(widths.max())
+        self.max_height = np.uint64(heights.max())
+        output_shape = (self.max_height, self.max_width, 3)
+        my_dtype = np.dtype('<u1')
+
+        return (
+            replace(previous_state, jit_mode=True,
+                    shape=output_shape, dtype=my_dtype),
+            (AllocationQuery(output_shape, my_dtype),
+            AllocationQuery((self.max_height * self.max_width * np.uint64(3),), my_dtype),
+            )
+        )
+
+    def generate_code(self) -> Callable:
+
+        jpg = IMAGE_MODES['jpg']
+
+        mem_read = self.memory_read
+        my_range = Compiler.get_iterator()
+        imdecode_c = Compiler.compile(imdecode)
+        pad_c = Compiler.compile(pad)
+
+        def decode(batch_indices, my_storage, metadata, storage_state):
+            destination, temp_storage = my_storage
+            for dst_ix in my_range(len(batch_indices)):
+                source_ix = batch_indices[dst_ix]
+                field = metadata[source_ix]
+                image_data = mem_read(field['data_ptr'], storage_state)
+                height = np.uint32(field['height'])
+                width = np.uint32(field['width'])
+
+                if field['mode'] == jpg:
+                    temp_buffer = temp_storage[dst_ix]
+                    imdecode_c(image_data, temp_buffer,
+                               height, width, height, width, 0, 0, 1, 1, False, False)
+                    selected_size = 3 * height * width
+                    temp_buffer = temp_buffer.reshape(-1)[:selected_size]
+                    temp_buffer = temp_buffer.reshape(height, width, 3)
+
+                else:
+                    temp_buffer = image_data.reshape(height, width, 3)
+
+                i = 0
+                j = 0
+                h = height
+                w = width
+
+                pad_c(temp_buffer, i, i + h, j, j + w,
+                              destination[dst_ix])
+
+            return destination[:len(batch_indices)]
+        decode.is_parallel = True
+        return decode
 
 
 class RandomResizedCropRGBImageDecoder(ResizedCropRGBImageDecoder):

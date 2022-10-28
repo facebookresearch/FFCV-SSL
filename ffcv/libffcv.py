@@ -2,9 +2,9 @@ import ctypes
 from numba import njit
 import numpy as np
 from ctypes import CDLL, c_int64, c_uint8, c_uint64, POINTER, c_void_p, c_uint32, c_bool, cdll
-import ffcv._libffcv
+import torchstrap._libffcv
 
-lib = CDLL(ffcv._libffcv.__file__)
+lib = CDLL(torchstrap._libffcv.__file__)
 libc = cdll.LoadLibrary('libc.so.6')
 
 read_c = libc.pread
@@ -19,6 +19,17 @@ ctypes_resize.argtypes = 11 * [c_int64]
 
 def resize_crop(source, start_row, end_row, start_col, end_col, destination):
     ctypes_resize(0,
+                  source.ctypes.data,
+                  source.shape[0], source.shape[1],
+                  start_row, end_row, start_col, end_col,
+                  destination.ctypes.data,
+                  destination.shape[0], destination.shape[1])
+
+ctypes_pad = lib.pad
+ctypes_pad.argtypes = 11 * [c_int64]
+
+def pad(source, start_row, end_row, start_col, end_col, destination):
+    ctypes_pad(0,
                   source.ctypes.data,
                   source.shape[0], source.shape[1],
                   start_row, end_row, start_col, end_col,

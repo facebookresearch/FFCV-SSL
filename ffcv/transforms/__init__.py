@@ -9,6 +9,12 @@ from .normalize import NormalizeImage
 from .translate import RandomTranslate
 from .mixup import ImageMixup, LabelMixup, MixupToOneHot
 from .module import ModuleWrapper
+from .colorjitter import RandomColorJitter, LabelColorJitter
+from .grayscale import RandomGrayscale, LabelGrayscale
+from .solarization import RandomSolarization, LabelSolarization
+from .translate import RandomTranslate, LabelTranslate
+from .gaussian_blur import GaussianBlur, LabelGaussianBlur
+from .erasing import RandomErasing
 
 __all__ = ['ToTensor', 'ToDevice',
            'ToTorchImage', 'NormalizeImage',
@@ -16,4 +22,10 @@ __all__ = ['ToTensor', 'ToDevice',
            'RandomResizedCrop', 'RandomHorizontalFlip', 'RandomTranslate',
            'Cutout', 'ImageMixup', 'LabelMixup', 'MixupToOneHot',
            'Poison', 'ReplaceLabel',
-           'ModuleWrapper']
+           'ModuleWrapper', 
+           'RandomColorJitter', 'LabelColorJitter',
+           'RandomGrayscale', 'LabelGrayscale',
+           'RandomSolarization', 'LabelSolarization',
+           'RandomTranslate', 'LabelTranslate',
+           'GaussianBlur', 'LabelGaussianBlur',
+           'RandomErasing']
