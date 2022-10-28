@@ -20,9 +20,10 @@ QUASIRANDOM_ERROR_MSG = '''Not enough memory; try setting quasi-random ordering
 '''
 
 class EpochIterator(Thread):
-    def __init__(self, loader: 'Loader', order: Sequence[int]):
+    def __init__(self, loader: "Loader", order: Sequence[int]):
         super().__init__(daemon=True)
-        self.loader: 'Loader' = loader
+        self.counter = 0
+        self.loader: "Loader" = loader
         self.order = order
         self.metadata = loader.reader.metadata
         self.current_batch_slot = 0
@@ -31,14 +32,13 @@ class EpochIterator(Thread):
         self.closed = False
         self.output_queue = Queue(self.loader.batches_ahead)
         self.terminate_event = Event()
-        self.memory_context = self.loader.memory_manager.schedule_epoch(
-            batches)
+        self.memory_context = self.loader.memory_manager.schedule_epoch(batches)
         try:
             self.memory_context.__enter__()
         except MemoryError as e:
             if loader.traversal_order != QuasiRandom:
                 print(QUASIRANDOM_ERROR_MSG)
-                print('Full error below:')
+                print("Full error below:")
 
             raise e
 
@@ -46,14 +46,17 @@ class EpochIterator(Thread):
 
         self.memory_bank_per_stage = defaultdict(list)
 
-        self.cuda_streams = [(ch.cuda.Stream() if IS_CUDA else None)
-                             for _ in range(self.loader.batches_ahead + 2)]
+        self.cuda_streams = [
+            (ch.cuda.Stream() if IS_CUDA else None)
+            for _ in range(self.loader.batches_ahead + 2)
+        ]
 
         # Allocate all the memory
         memory_allocations = {}
         for (p_id, p) in self.loader.pipelines.items():
-            memory_allocations[p_id] = p.allocate_memory(self.loader.batch_size,
-                                                         self.loader.batches_ahead + 2)
+            memory_allocations[p_id] = p.allocate_memory(
+                self.loader.batch_size, self.loader.batches_ahead + 2
+            )
 
         # Assign each memory bank to the pipeline stage it belongs to
         for s_ix, banks in self.loader.memory_bank_keys_per_stage.items():
@@ -74,9 +77,8 @@ class EpochIterator(Thread):
             while True:
                 ixes = next(self.iter_ixes)
                 slot = self.current_batch_slot
-                self.current_batch_slot = (
-                    slot + 1) % (self.loader.batches_ahead + 2)
-                result = self.run_pipeline(b_ix, ixes, slot, events[slot])
+                self.current_batch_slot = (slot + 1) % (self.loader.batches_ahead + 2)
+                result = self.run_pipeline(b_ix, ixes, slot, events[slot], slot)
                 to_output = (slot, result)
                 while True:
                     try:
@@ -94,7 +96,9 @@ class EpochIterator(Thread):
                     # Therefore batch_slot - batch_ahead must have all it's work submitted
                     # We will record an event of all the work submitted on the main stream
                     # and make sure no one overwrite the data until they are done
-                    just_finished_slot = (slot - self.loader.batches_ahead) % (self.loader.batches_ahead + 2)
+                    just_finished_slot = (slot - self.loader.batches_ahead) % (
+                        self.loader.batches_ahead + 2
+                    )
                     event = ch.cuda.Event()
                     event.record(ch.cuda.default_stream())
                     events[just_finished_slot] = event
@@ -103,8 +107,7 @@ class EpochIterator(Thread):
         except StopIteration:
             self.output_queue.put(None)
 
-    def run_pipeline(self, b_ix, batch_indices, batch_slot, cuda_event):
-        # print(b_ix, batch_indices)
+    def run_pipeline(self, b_ix, batch_indices, batch_slot, cuda_event, slot):
         self.memory_context.start_batch(b_ix)
         args = []
         if IS_CUDA:
@@ -119,6 +122,7 @@ class EpochIterator(Thread):
                 if cuda_event:
                     cuda_event.wait()
             for stage, banks in self.memory_bank_per_stage.items():
+                args.insert(0, self.counter)
                 args.insert(0, batch_indices)
                 for bank in banks:
                     if bank is not None:
@@ -135,7 +139,8 @@ class EpochIterator(Thread):
                 if first_stage:
                     first_stage = False
                     self.memory_context.end_batch(b_ix)
-        return tuple(x[:len(batch_indices)] for x in args)
+        self.counter += 1
+        return tuple(x[: len(batch_indices)] for x in args)
 
     def __next__(self):
         result = self.output_queue.get()
@@ -159,4 +164,3 @@ class EpochIterator(Thread):
 
     def __del__(self):
         self.close()
-        

@@ -2,9 +2,9 @@ import ctypes
 from numba import njit
 import numpy as np
 from ctypes import CDLL, c_int64, c_uint8, c_uint64, POINTER, c_void_p, c_uint32, c_bool, cdll
-import torchstrap._libffcv
+import ffcv._libffcv
 
-lib = CDLL(torchstrap._libffcv.__file__)
+lib = CDLL(ffcv._libffcv.__file__)
 libc = cdll.LoadLibrary('libc.so.6')
 
 read_c = libc.pread

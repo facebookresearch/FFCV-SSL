@@ -1,7 +1,18 @@
 import numpy as np
+import numba
+import random
 from numba import types
 from numba.extending import intrinsic
 
+
+@numba.jit(nopython=True)
+def set_seed(seed, indices):
+    rep = ""
+    for i in indices:
+        rep += str(i)
+    local_seed = (hash(rep) + seed) % 2**31
+    random.seed(local_seed)
+    np.random.seed(local_seed)
 
 def chunks(lst, n):
     for i in range(0, len(lst), n):

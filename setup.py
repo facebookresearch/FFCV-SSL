@@ -27,7 +27,7 @@ extension_kwargs = {
     'sources': sources,
     'include_dirs': []
 }
-extension_kwargs = pkgconfig('opencv4', extension_kwargs)
+# extension_kwargs = pkgconfig('opencv4', extension_kwargs)
 extension_kwargs = pkgconfig('libturbojpeg', extension_kwargs)
 
 extension_kwargs['libraries'].append('pthread')

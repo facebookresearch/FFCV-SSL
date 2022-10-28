@@ -35,9 +35,9 @@ Keep your training algorithm the same, just replace the data loader! Look at the
 
 # Installation
 ```
-conda create -y -n ffcv python=3.9 cupy pkg-config compilers libjpeg-turbo opencv pytorch torchvision cudatoolkit=11.3 numba -c pytorch -c conda-forge
-conda activate ffcv
-pip install ffcv
+conda create -y -n ffcv2 python=3.9 cupy pkg-config compilers libjpeg-turbo opencv pytorch torchvision torchaudio pytorch-cuda=11.7 numba -c pytorch -c nvidia -c conda-forge
+conda activate ffcv2
+pip install -e .
 ```
 Troubleshooting note: if the above commands result in a package conflict error, try running ``conda config --env --set channel_priority flexible`` in the environment and rerunning the installation command.
 
