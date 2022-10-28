@@ -1,114 +1,53 @@
-# Table of contents
-1. [Why torchstrap](#introduction)
-2. [code templating](#templating)
-3. [trainer pipeline](#pipeline)
-4. FFCV augmentations, seeding and multiview
-   - [data augmentation and loader seeding](#seeding)
-   - [image augmentations](#image_augs)
-   - [multi-view for SSL](#multiview)
-5. [Installation](#installation)
-6. [How to contribute](#contribute)
+<p align = 'center'>
+<em><b>Fast Forward Computer Vision</b>: train models at a fraction of the cost with accelerated data loading!</em>
+</p>
+<img src='assets/logo.svg' width='100%'/>
+<p align = 'center'>
+<!-- <br /> -->
+[<a href="#install-with-anaconda">install</a>]
+[<a href="#quickstart">quickstart</a>]
+[<a href="#features">features</a>]
+[<a href="https://docs.ffcv.io">docs</a>]
+[<a href="https://join.slack.com/t/ffcv-workspace/shared_invite/zt-11olgvyfl-dfFerPxlm6WtmlgdMuw_2A">support slack</a>]
+[<a href="https://ffcv.io">homepage</a>]
+<br>
+Maintainers:
+<a href="https://twitter.com/gpoleclerc">Guillaume Leclerc</a>,
+<a href="https://twitter.com/andrew_ilyas">Andrew Ilyas</a> and
+<a href="https://twitter.com/logan_engstrom">Logan Engstrom</a>
+</p>
 
+`ffcv` is a drop-in data loading system that dramatically increases data throughput in model training:
 
-# Why torchstrap <a name="introduction"></a>
+- [Train an ImageNet model](#prepackaged-computer-vision-benchmarks)
+on one GPU in 35 minutes (98¢/model on AWS)
+- [Train a CIFAR-10 model](https://docs.ffcv.io/ffcv_examples/cifar10.html)
+on one GPU in 36 seconds (2¢/model on AWS)
+- Train a `$YOUR_DATASET` model `$REALLY_FAST` (for `$WAY_LESS`)
 
+Keep your training algorithm the same, just replace the data loader! Look at these speedups:
 
-The goal of torchstrap is to provide an API-like utility for AI/deep learning researchers to enable ultra-fast testing of any ideas that roam around.
-Torchstrap aims at ``smartly combining'' minimal features from a few successful libraries while compartimenting them to enable anyone to use only the desired torchstrap features without the others interefering:
+<img src="assets/headline.svg" width='830px'/>
 
-- *pytorch-lightning*: we use a similar (but lightweight) `torchstrap.Trainer` wih user-defined function calls before each train/val epoch/step e.g. `Trainer.before_eval_step` but without all the ``behind the curtains magic'' and with a stronger focus on research rather than production so it is simple to implement its own `Trainer.create_model` or `Trainer.initialize_optimizer` and so on
-- *fastargs+argparse*: we use a rich but lightweight templating strategy so that all hyper-parameters/function arguments are tracked and accessible/exportable in a few lines for examples simply define a function with
-    ```
-    @torchstrap.config.param("optimizer.lr")
-    def my_fn(lr):
-        ...
-    ```
-    and the value of `lr` can be either given by hand e.g. calling `my_fn(1.0)` or can be loaded from a config file, or given from command line `python main.py --optimizer.lr 1.0` and its value will be logged as part of the hyper-parameters, more details in [this section](#templating)
-- *pytables/pyml/json/hdf5*: when doing research, logging is crucial, and it is not only about simple scalars... which is why we build-upon highly efficient and scalable h5 logging for arrays, and simpler txt/json logging for everything else; each version can be called with the values to log e.g. `Trainer.log({"loss":loss.item(),"lr":self.optimizer.lr.item()})` and `Trainer.log_hdf5({"layer1w":self.model.layer1.weight.detach().numpy()})` which allows to keep track of desired value throughout traiing
-- *pytorch-metric-learning+torch.nn*: we provide out-of-the-box the criterions offered from those two libraries which can be used and parametrized directly from the templating scheme
-- *FFCV*: speed is crucial to quickly try ideas which is why we provide a rich augmented version of FFCV with seeding, more augmentations, multi-view support and so on and so forth, more details in [this section](#seeding)
-- *submitit*: when working on a cluster it is crucial to submit jobs, requeue, save temporary checkpoints... which is why we interfaced `Trainer` with a submitit wrapper so that it all gets handled automatically
+`ffcv` also comes prepacked with [fast, simple code](https://github.com/libffcv/imagenet-example) for [standard vision benchmarks]((https://docs.ffcv.io/benchmarks.html)):
 
-# Fast code templating <a name="templating"></a>
+<img src="docs/_static/perf_scatterplot.svg" width='830px'/>
 
-The key idea is that we do not want to carry around our hyper-parameters... hence leveraging the powerful `fastargs` library, you can now position anywhere in your code the following (example)
-
+# Installation
 ```
-from fastargs import Param, Section
-from fastargs.validation import OneOf
-
-
-Section("custom_name", "brief description if needed").params(
-    my_param1=Param(
-        OneOf([0.0,0.5,1.0]),
-        "specific description if needed",
-        required=True
-    ),
-    my_param2=Param(
-        OneOf(["train", "test"]),
-        "another specific description if needed",
-        default="ConstantLR",
-    )
-)
+conda create -y -n ffcv python=3.9 cupy pkg-config compilers libjpeg-turbo opencv pytorch torchvision cudatoolkit=11.3 numba -c pytorch -c conda-forge
+conda activate ffcv
+pip install ffcv
 ```
-and then wherever you need to access those hyper-parameter within your codebase, simply do (for example)
-```
-from fastargs.decorators import param
-@param("model.load_from")
-def load_checkpoint(self, load_from: str):
-    """load a model and optionnally a scheduler/optimizer/epoch from a given path to checkpoint
+Troubleshooting note: if the above commands result in a package conflict error, try running ``conda config --env --set channel_priority flexible`` in the environment and rerunning the installation command.
 
-    Args:
-        load_from (str): path to checkpoint
-    """
-```
+# What's new <a name="introduction"></a>
 
+- *More augmentations*: Data augmentations is crucial for methods like Self-supervised learning, in this fork we add ColorJitter, Solarization, Grayscale, Rotation.. 
+- *Seeding** Being able to fix the seed of a given transformation is important for reproducibility
+- *Multi views* FFCV2 is able to return an arbitraty number of different view of a given field with different pipelines.
 
-# Workflow of `torchstrap.Trainer` <a name="pipeline"></a>
-
-```bash
-
-# ----- INIT (__init__ method) ------
-
-initialize_model() # and then do a bunch of stuff to change device, dtype, distributed, sync_BN, ....
-if not training.eval_only:
-    initializer_train_loader()
-initializer_val_loader()
-if not training.eval_only:
-    initialize_optimizer()
-    initialize_scheduler()
-
-load_checkpoint()
-initialize_metrics()
-initialize_criterion()
-initialize_logger()
-
-# ---- TRAINING LOOP (train_all_epochs method) ------
-
-for epoch in epochs
-    
-    modules.train() # put all children modules in train mode
-    before_train_epoch() # <- nothing by default
-    for step, batch in enumerate(train_dataset)
-        self.data=batch and self.step=step # <- for easy access
-        before_train_step() # <- nothing by default
-        train_step() # <- forward + loss + backward + gradient step + scheduler if not MultiStepLR or StepLR
-        after_train_step() # <- nothing by default
-    update scheduler if  MultiStepLR or StepLR
-    after_train_epoch() # <- nothing by default
-
-    # ---- (only if logging.eval_each_epoch == True) ----
-    
-    modules.eval() # put all children modules in eval mode
-    before_eval_epoch() # <- nothing by default
-    for batch in eval_dataset
-        self.data=batch and self.step=step # <- for easy access
-        before_eval_step() # <- nothing by default
-        eval_step() # w/ test time augs. and record metrics
-        after_eval_step() # <- nothing by default
-    after_eval_epoch() # <- nothing by default
-```
-# `torchstrap.data.ffcv` seeding <a name="seeding"></a>
+# `ffcv` seeding <a name="seeding"></a>
  
 To reproduce those figures, please run [this code](./examples/test_ffcv_augmentations_seeding.py) located in the examples folder.
 By default the loader and DAs have a `None` seed i.e. different runs have different data ordering and augmentaiton realizations as shown below for a mini-batch size of 3 on Imagenet only with random crop and translation as DAs. 
@@ -136,7 +75,7 @@ loader with seed=0             |  loader with seed=1
 
 
 
-# `torchstrap.data.ffcv.transforms.image`<a name="image_augs"></a>
+# `ffcv.transforms.image`<a name="image_augs"></a>
 
 All the plots here use the same seed for the data-augmentations hence the same realisation. To reproduce those figures use [this code](../examples/test_ffcv_augmentations_families.py).
 
@@ -189,10 +128,6 @@ To reproduce those figures use [this code](../examples/test_ffcv_augmentations_s
 ![](./assets/visual_images_ssl.png)
 
 
-
-# Installation <a name="installation"></a>
-
-simply do `pip install .` in the repository
 
 # How to contribute <a name="contribute"></a>
 
