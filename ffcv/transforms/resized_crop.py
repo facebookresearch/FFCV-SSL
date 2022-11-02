@@ -16,7 +16,7 @@ from ffcv.fields import rgb_image, ndarray
 from numba.typed import Dict
 
 from ffcv.pipeline.compiler import Compiler
-from torchstrap.data.ffcv.libffcv import imdecode, resize_crop, pad
+from ffcv.libffcv import imdecode, resize_crop, pad
 
 from dataclasses import replace
 
@@ -171,7 +171,7 @@ def get_center_crop(height, width, _, ratio, r1, r2, r3, r4):
     return delta_h, delta_w, c, c
 
 
-class RandomResizedCropDecoder(rgb_image.RandomResizedCropRGBImageDecoder):
+class RandomResizedCrop(rgb_image.RandomResizedCropRGBImageDecoder):
     """Decoder for :class:`~ffcv.fields.RGBImageField` that performs a Random crop and and a resize operation.
     It supports both variable and constant resolution datasets.
     Parameters
@@ -383,7 +383,7 @@ class RandomResizedCropDecoder(rgb_image.RandomResizedCropRGBImageDecoder):
         )
 
 
-class LabelRandomResizedCropDecoder(rgb_image.RandomResizedCropRGBImageDecoder):#IntDecoder, ndarray.NDArrayDecoder):
+class LabelRandomResizedCrop(rgb_image.RandomResizedCropRGBImageDecoder):#IntDecoder, ndarray.NDArrayDecoder):
     """Decoder for :class:`~ffcv.fields.RGBImageField` that performs a Random crop and and a resize operation.
     It supports both variable and constant resolution datasets.
     Parameters
@@ -512,7 +512,7 @@ class LabelRandomResizedCropDecoder(rgb_image.RandomResizedCropRGBImageDecoder):
             ),
         )
 
-class CenterCropDecoder(RandomResizedCropDecoder):
+class CenterCrop(RandomResizedCrop):
     """Decoder for :class:`~ffcv.fields.RGBImageField` that performs a center crop followed by a resize operation.
     It supports both variable and constant resolution datasets.
     Parameters
