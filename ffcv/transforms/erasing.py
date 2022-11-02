@@ -17,7 +17,7 @@ from ffcv.pipeline.compiler import Compiler
 from dataclasses import replace
 import numpy as np
 import random
-from ...utils import set_seed
+from ffcv.utils import set_seed
 from .resized_crop import get_random_crop
 
 
