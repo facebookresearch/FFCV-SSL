@@ -17,7 +17,7 @@ import numpy as np
 from .epoch_iterator import EpochIterator
 from ..reader import Reader
 from ..traversal_order.base import TraversalOrder
-from ..traversal_order import Random, Sequential, QuasiRandom
+from ..traversal_order import Random, Sequential, QuasiRandom, SequentialContiguous
 from ..pipeline import Pipeline
 from ..pipeline.compiler import Compiler
 from ..pipeline.operation import Operation
@@ -30,6 +30,7 @@ from ..memory_managers import (
 @unique
 class OrderOption(Enum):
     SEQUENTIAL = auto()
+    SEQUENTIAL_CONTIGUOUS = auto()
     RANDOM = auto()
     QUASI_RANDOM = auto()
 
@@ -43,6 +44,7 @@ ORDER_TYPE = Union[
 ORDER_MAP: Mapping[ORDER_TYPE, TraversalOrder] = {
     OrderOption.RANDOM: Random,
     OrderOption.SEQUENTIAL: Sequential,
+    OrderOption.SEQUENTIAL_CONTIGUOUS : SequentialContiguous,
     OrderOption.QUASI_RANDOM: QuasiRandom
 }
 
