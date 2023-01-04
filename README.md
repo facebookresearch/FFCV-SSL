@@ -1,37 +1,9 @@
 <p align = 'center'>
-<em><b>Fast Forward Computer Vision</b>: train models at a fraction of the cost with accelerated data loading!</em>
-</p>
-<img src='assets/logo.svg' width='100%'/>
-<p align = 'center'>
-<!-- <br /> -->
-[<a href="#install-with-anaconda">install</a>]
-[<a href="#quickstart">quickstart</a>]
-[<a href="#features">features</a>]
-[<a href="https://docs.ffcv.io">docs</a>]
-[<a href="https://join.slack.com/t/ffcv-workspace/shared_invite/zt-11olgvyfl-dfFerPxlm6WtmlgdMuw_2A">support slack</a>]
-[<a href="https://ffcv.io">homepage</a>]
-<br>
-Maintainers:
-<a href="https://twitter.com/gpoleclerc">Guillaume Leclerc</a>,
-<a href="https://twitter.com/andrew_ilyas">Andrew Ilyas</a> and
-<a href="https://twitter.com/logan_engstrom">Logan Engstrom</a>
-</p>
+<h1><b>Fast Forward Computer Vision for Self-Supervised Learning</b></h1>
 
-`ffcv` is a drop-in data loading system that dramatically increases data throughput in model training:
+`ffcv` is a fork of the [FFCV library](https://github.com/libffcv/ffcv) with an added support of Self-Supervised training. In this fork, you can find the traditional data augmentations used in SSL but also several improvements to handle multiple views of a given image and examples on how to train well-known SSL methods like SimCLR. Here is an example of the performances, one can get on SimCLR using FFCV-SSL:
 
-- [Train an ImageNet model](#prepackaged-computer-vision-benchmarks)
-on one GPU in 35 minutes (98¢/model on AWS)
-- [Train a CIFAR-10 model](https://docs.ffcv.io/ffcv_examples/cifar10.html)
-on one GPU in 36 seconds (2¢/model on AWS)
-- Train a `$YOUR_DATASET` model `$REALLY_FAST` (for `$WAY_LESS`)
-
-Keep your training algorithm the same, just replace the data loader! Look at these speedups:
-
-<img src="assets/headline.svg" width='830px'/>
-
-`ffcv` also comes prepacked with [fast, simple code](https://github.com/libffcv/imagenet-example) for [standard vision benchmarks]((https://docs.ffcv.io/benchmarks.html)):
-
-<img src="docs/_static/perf_scatterplot.svg" width='830px'/>
+<img src="assets/ffcv_vs_torchvision.jpg" width='830px'/>
 
 # Installation
 ```
@@ -128,26 +100,6 @@ To reproduce those figures use [this code](../examples/test_ffcv_augmentations_s
 ![](./assets/visual_images_ssl.png)
 
 
-
-# How to contribute <a name="contribute"></a>
-
-
-
-# References for the implementations
-
-
-- Graph Laplacian Estimation:
-  - [TODO](https://github.com/rodrigo-pena/graph-learning)
-  -  [SGL](https://github.com/anshul3899/Structured-Graph-Learning)
-- [COke](https://github.com/idstcv/CoKe) for augmentations and losses:
-  - `torchstrap.torchvision_pipelines.coke_imagenet_single_view`
-  - `torchstrap.torchvision_pipelines.coke_imagenet_double_view`
-  - `torchstrap.torchvision_pipelines.coke_imagenet_multi_view`
-  - `torchstrap.criterion.coke_single_view`
-  - `torchstrap.criterion.coke_multi_view`
--
-
-
 ## License
 
-This project is released under MIT License, which allows commercial use. See [LICENSE](LICENSE) for details.
+This project is released, as the original repository, under Apache 2.0 License. See [LICENSE](LICENSE) for details.
