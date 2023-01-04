@@ -17,6 +17,7 @@ Troubleshooting note: if the above commands result in a package conflict error, 
 
 - *More augmentations*: Data augmentations is crucial for methods like Self-supervised learning, in this fork we add ColorJitter, Solarization, Grayscale, Rotation.. 
 - *Seeding** Being able to fix the seed of a given transformation is important for reproducibility
+- *Data augmentations parameters* In this fork you can get label pipelines that will return the parameters of the data augmentations that are used.
 - *Multi views* FFCV-SSL is able to return an arbitraty number of different view of a given field with different pipelines.
 
 # `ffcv` seeding <a name="seeding"></a>
