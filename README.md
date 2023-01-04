@@ -35,8 +35,8 @@ Keep your training algorithm the same, just replace the data loader! Look at the
 
 # Installation
 ```
-conda create -y -n ffcv2 python=3.9 cupy pkg-config compilers libjpeg-turbo opencv pytorch torchvision torchaudio pytorch-cuda=11.7 numba -c pytorch -c nvidia -c conda-forge
-conda activate ffcv2
+conda create -y -n ffcv-ssl python=3.9 cupy pkg-config compilers libjpeg-turbo opencv pytorch torchvision torchaudio pytorch-cuda=11.7 numba -c pytorch -c nvidia -c conda-forge
+conda activate ffcv-ssl
 pip install -e .
 ```
 Troubleshooting note: if the above commands result in a package conflict error, try running ``conda config --env --set channel_priority flexible`` in the environment and rerunning the installation command.
@@ -45,7 +45,7 @@ Troubleshooting note: if the above commands result in a package conflict error, 
 
 - *More augmentations*: Data augmentations is crucial for methods like Self-supervised learning, in this fork we add ColorJitter, Solarization, Grayscale, Rotation.. 
 - *Seeding** Being able to fix the seed of a given transformation is important for reproducibility
-- *Multi views* FFCV2 is able to return an arbitraty number of different view of a given field with different pipelines.
+- *Multi views* FFCV-SSL is able to return an arbitraty number of different view of a given field with different pipelines.
 
 # `ffcv` seeding <a name="seeding"></a>
  
