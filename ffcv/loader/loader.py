@@ -165,8 +165,8 @@ class Loader:
         self.field_name_to_f_ix = {}
 
         for f_ix, (field_name, field) in enumerate(self.reader.handlers.items()):
-            if f_ix > 1:
-                f_ix = 0
+            if custom_field_mapper is not None and field_name in custom_field_mapper.keys():
+                f_ix = self.field_name_to_f_ix[custom_field_mapper[field_name]] 
             self.field_name_to_f_ix[field_name] = f_ix
             DecoderClass = field.get_decoder_class()
             try:
