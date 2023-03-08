@@ -704,7 +704,7 @@ class ImageNetTrainer:
                 self.log(dict(stats,  **extra_dict))
             self.eval_and_log(stats, extra_dict)
             # Run checkpointing
-            self.checkpoint(epoch)
+            self.checkpoint(epoch + 1)
         if self.gpu == 0:
             ch.save(self.model.state_dict(), self.log_folder / 'final_weights.pt')
 
