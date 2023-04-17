@@ -84,12 +84,16 @@ custom_field_mapper={"crop_parameters": "image"}
 If you use FFCV-SSL, please cite it as:
 
 ```
-@misc{bordes2022ffcv_ssl,
-    author = {Florian Bordes, Randall Balestriero},
-    title = {ffcv_ssl},
-    year = {2023},
-    howpublished = {\url{https://github.com/facebookresearch/FFCV-SSL}},
-    note = {commit xxxxxxx}
+
+@misc{bordes2023ffcv_ssl,
+  doi = {10.48550/ARXIV.2303.01986},
+  url = {https://arxiv.org/abs/2303.01986},
+  author = {Bordes, Florian and Balestriero, Randall and Vincent, Pascal},
+  keywords = {Machine Learning (cs.LG), FOS: Computer and information sciences, FOS: Computer and information sciences},
+  title = {Towards Democratizing Joint-Embedding Self-Supervised Learning},
+  publisher = {arXiv},
+  year = {2023},
+  copyright = {arXiv.org perpetual, non-exclusive license}
 }
 
 @misc{leclerc2022ffcv,
