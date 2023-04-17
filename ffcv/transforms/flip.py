@@ -58,6 +58,7 @@ class RandomHorizontalFlip(Operation):
                     dst[i] = images[i]
             return dst
         flip.is_parallel = True
+        flip.with_counter = True
         return flip
 
 
