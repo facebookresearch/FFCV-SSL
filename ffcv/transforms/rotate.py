@@ -37,7 +37,7 @@ class Rotate(Operation):
 
         def rotate(images, dst, counter):
             if seed is not None:
-                np.random.seed(seed + counter)
+                random.seed(seed + counter)
                 values = np.zeros(images.shape[0])
                 angles = np.zeros(images.shape[0])
                 for i in range(images.shape[0]):
