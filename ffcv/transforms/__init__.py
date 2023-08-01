@@ -15,6 +15,7 @@ from .solarization import RandomSolarization, LabelSolarization
 from .translate import RandomTranslate, LabelTranslate
 from .gaussian_blur import GaussianBlur, LabelGaussianBlur
 from .erasing import RandomErasing
+from .rotate import Rotate
 
 __all__ = ['ToTensor', 'ToDevice',
            'ToTorchImage', 'NormalizeImage',
@@ -28,4 +29,4 @@ __all__ = ['ToTensor', 'ToDevice',
            'RandomSolarization', 'LabelSolarization',
            'RandomTranslate', 'LabelTranslate',
            'GaussianBlur', 'LabelGaussianBlur',
-           'RandomErasing']
+           'RandomErasing', 'Rotate']

@@ -35,9 +35,9 @@ class Rotate(Operation):
         angle = self.angle
         seed = self.seed
 
-        def rotate(images, dst, indices):
+        def rotate(images, dst, counter):
             if seed is not None:
-                np.random.seed(seed + indices)
+                random.seed(seed + counter)
                 values = np.zeros(images.shape[0])
                 angles = np.zeros(images.shape[0])
                 for i in range(images.shape[0]):
@@ -69,12 +69,18 @@ class Rotate(Operation):
                                 np.int32(coords[j, 1]) + W // 2,
                                 :,
                             ] = images[i, src_coords[j, 0], src_coords[j, 1], :]
+                        else:
+                            dst[i,
+                                np.int32(coords[j, 0]) + H // 2,
+                                np.int32(coords[j, 1]) + W // 2,
+                                :,
+                                ] = 0.
                 else:
                     dst[i] = images[i]
             return dst
 
         rotate.is_parallel = True
-        rotate.with_indices = True
+        rotate.with_counter = True
         return rotate
 
     def declare_state_and_memory(
