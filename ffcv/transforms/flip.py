@@ -50,7 +50,7 @@ class RandomHorizontalFlip(Operation):
             random.seed(seed + counter)
             should_flip = np.zeros(len(images))
             for i in range(len(images)):
-                should_flip[i] = random.uniform(0, 1)
+                should_flip[i] = random.uniform(0, 1) < flip_prob
             for i in my_range(images.shape[0]):
                 if should_flip[i]:
                     dst[i] = images[i, :, ::-1]
